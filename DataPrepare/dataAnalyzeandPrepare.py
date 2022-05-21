@@ -45,10 +45,10 @@ def GetNorData(csv_path):
     return df
 
 
-def GetPCAData(csv_path):
+def GetPCAData(csv_path, n_components):
     df = GetNorData(csv_path)
     # PCA降维
-    pca = decomposition.PCA(n_components=8)
+    pca = decomposition.PCA(n_components=n_components)
     df = pca.fit_transform(df)  #ndarray
     return df
 

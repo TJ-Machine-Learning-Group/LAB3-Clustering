@@ -6,81 +6,49 @@ from sklearn import datasets
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
 from sklearn import metrics
-from sklearn.metrics import silhouette_score, homogeneity_completeness_v_measure, davies_bouldin_score
 import time
 
 
-def delta(ck, cl):
-    values = np.ones([len(ck), len(cl)]) * 10000
-
-    for i in range(0, len(ck)):
-        for j in range(0, len(cl)):
-            values[i, j] = np.linalg.norm(ck[i] - cl[j])
-
-    return np.min(values)
+def Silhouette(X, labels):
+    return metrics.silhouette_score(X, labels, metric='euclidean')
 
 
-def big_delta(ci):
-    values = np.zeros([len(ci), len(ci)])
-
-    for i in range(0, len(ci)):
-        for j in range(0, len(ci)):
-            values[i, j] = np.linalg.norm(ci[i] - ci[j])
-
-    return np.max(values)
+def CH(X, labels):
+    return metrics.calinski_harabasz_score(X, labels)
 
 
-def dunn(k_list):
-    """ Dunn index [CVI]
-    
-    Parameters
-    ----------
-    k_list : list of np.arrays
-        A list containing a numpy array for each cluster |c| = number of clusters
-        c[K] is np.array([N, p]) (N : number of samples in cluster K, p : sample dimension)
-    """
-    deltas = np.ones([len(k_list), len(k_list)]) * 1000000
-    big_deltas = np.zeros([len(k_list), 1])
-    l_range = list(range(0, len(k_list)))
-
-    for k in l_range:
-        for l in (l_range[0:k] + l_range[k + 1:]):
-            deltas[k, l] = delta(k_list[k], k_list[l])
-
-        big_deltas[k] = big_delta(k_list[k])
-
-    di = np.min(deltas) / np.max(big_deltas)
-    return di
-
-
-# Dunn Validity Index
-def DVI(X, labels, n_clusters):
-    # store the K-means results in a dataframe
-    pred = pd.DataFrame(labels)
-    pred.columns = ['Type']
-
-    # merge this dataframe with X
-    X_ = pd.DataFrame(X)
-    prediction = pd.concat([X_, pred], axis=1)
-
-    # store the clusters
-    cluster_list = []
-    for i in n_clusters:
-        cluster_list.append(prediction.loc[prediction.Type == i])
-    return dunn(cluster_list)
+def DBI(X, labels):
+    return metrics.davies_bouldin_score(X, labels)
 
 
 # 总评估函数
-def Eval(X, labels):
+def Eval(X: np.ndarray, labels: np.ndarray):
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    n_noise_ = list(labels).count(-1)
+
+    print("Estimated number of clusters: %d" % n_clusters_)
+    print("Estimated number of noise points: %d" % n_noise_)
+
+    #没有labels_true 没法用这些评价指标
+    #print("Homogeneity: %0.3f" %
+    #      metrics.homogeneity_score(labels_true, labels))
+    #print("Completeness: %0.3f" %
+    #      metrics.completeness_score(labels_true, labels))
+    #print("V-measure: %0.3f" % metrics.v_measure_score(labels_true, labels))
+    #print("Adjusted Rand Index: %0.3f" %
+    #      metrics.adjusted_rand_score(labels_true, labels))
+    #print("Adjusted Mutual Information: %0.3f" %
+    #      metrics.adjusted_mutual_info_score(labels_true, labels))
+
     # 轮廓系数
-    Silhouette = metrics.silhouette_score(X, labels, metric='euclidean')
-    print("Silhouette = ", Silhouette)
+    print("Silhouette Coefficient: %0.3f" %
+          metrics.silhouette_score(X, labels))
     # Calinski-Harabaz Index
-    print("CH = ", metrics.calinski_harabasz_score(X, labels))
+    print("Calinski-Harabaz Index:%.3f" %
+          metrics.calinski_harabasz_score(X, labels))
     # 分类适确性指标
-    print("DBI = ", davies_bouldin_score(X, labels))
-    # 邓恩指数, 计算耗时较长
-    # print("DVI = ", DVI(X, labels))
+    print("Davies-Bouldin Index:%.3f" %
+          metrics.davies_bouldin_score(X, labels))
 
 
 # 测试评估函数
