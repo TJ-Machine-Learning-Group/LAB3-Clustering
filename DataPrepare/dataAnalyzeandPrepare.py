@@ -1,19 +1,59 @@
-# %% [markdown]
-# # 相关库、函数的导入以及全局设定
-
 # %%
 # 相关库和函数导入
 import numpy as np
 import pandas as pd
-
 import matplotlib.pyplot as plt  # 图形化
 import seaborn as sns  # 热度图
-
 from IPython.display import display  # 载入数据查看时需要使用的函数
 from sklearn import decomposition  # PCA
 
 
-def Show():
+# 数据预处理
+def GetData(csv_path):
+    dt = pd.read_csv(
+        csv_path, dtype={'status_id': str}, encoding='gbk',
+        engine='python')  # 导入数据，注意编码使用gbk，然后含有中文字符的地址要设定"engine=python"
+
+    # ## 数据清洗
+    dt_new = dt.iloc[:, 1:-4]  # 去除数据集最后4列和第一列
+
+    # 如果有重复值则去重？
+    # 貌似不应该去重，同天发布的同类型商品反应数量相同是有可能的
+    #dt_new = dt_new.drop_duplicates()  # 去除重复值
+
+    # 时间转时间戳
+    dt_new['status_published'] = pd.to_datetime(dt_new['status_published'],
+                                                format='%m/%d/%Y %H:%M',
+                                                errors='coerce')
+    dt_new['status_published'] = dt_new['status_published'].astype(
+        'int64') // 1e9
+
+    # 类别数据编码，添加四行
+    pf = pd.get_dummies(dt_new['status_type'])
+    dt_new = pd.concat([dt_new, pf], axis=1)
+    dt_new.drop(['status_type'], axis=1, inplace=True)
+    return dt_new
+
+
+def GetNorData(csv_path):
+    dt_new = GetData(csv_path)
+    #标准化
+    cols = dt_new.columns
+    df = pd.DataFrame()
+    for col in cols:
+        df['S_' + col] = (dt_new[col] - dt_new[col].mean()) / dt_new[col].std()
+    return df
+
+
+def GetPCAData(csv_path):
+    df = GetNorData(csv_path)
+    # PCA降维
+    pca = decomposition.PCA(n_components=8)
+    df = pca.fit_transform(df)  #ndarray
+    return df
+
+
+if __name__ == "__main__":
     # 全局设定
     pd.set_option('display.unicode.ambiguous_as_wide', True)
     pd.set_option('display.unicode.east_asian_width',
@@ -22,12 +62,10 @@ def Show():
 
     # %% [markdown]
     # # 数据导入
-
+    csv_path = "./Live_20210128.csv"
     # %%
     dt = pd.read_csv(
-        "./Live_20210128.csv",
-        dtype={'status_id': str},
-        encoding='gbk',
+        csv_path, dtype={'status_id': str}, encoding='gbk',
         engine='python')  # 导入数据，注意编码使用gbk，然后含有中文字符的地址要设定"engine=python"
 
     # %% [markdown]
@@ -121,16 +159,13 @@ def Show():
     # # %%
     #标准化
     cols = dt_new.columns
-    print(cols)
-    Scols = []
 
     df = pd.DataFrame()
     # df.insert(0, 'status_id', dt_new['status_id'].values)
     for col in cols:
-        if col == 'status_id' or "Column" in col:
+        if col == 'status_id':
             continue
         df['S_' + col] = (dt_new[col] - dt_new[col].mean()) / dt_new[col].std()
-        Scols.append('S_' + col)
     display(df[0:5])  # 查看数据集的前5行数据
 
     # PCA降维
@@ -148,46 +183,3 @@ def Show():
     plt.ylim(b + 0.5, t - 0.5)
     plt.title("Feature Correlation Heatmap")
     plt.show()
-
-
-def GetData(csv_path):
-    dt = pd.read_csv(
-        csv_path, dtype={'status_id': str}, encoding='gbk',
-        engine='python')  # 导入数据，注意编码使用gbk，然后含有中文字符的地址要设定"engine=python"
-
-    # # 数据预处理
-
-    # ## 数据清洗
-    dt_new = dt.iloc[:, 0:12]  # 去除数据集最后4列
-
-    # 如果有重复值则去重
-    dt_new = dt_new.drop_duplicates()  # 去除重复值
-
-    # 时间转时间戳
-    dt_new['status_published'] = pd.to_datetime(dt_new['status_published'],
-                                                format='%m/%d/%Y %H:%M',
-                                                errors='coerce')
-    dt_new['status_published'] = dt_new['status_published'].astype(
-        'int64') // 1e9
-
-    # 类别数据编码
-    pf = pd.get_dummies(dt_new['status_type'])
-    dt_new = pd.concat([dt_new, pf], axis=1)
-    dt_new.drop(['status_type'], axis=1, inplace=True)
-
-    #标准化
-    cols = dt_new.columns
-    Scols = []
-
-    df = pd.DataFrame()
-    # df.insert(0, 'status_id', dt_new['status_id'].values)
-    for col in cols:
-        if col == 'status_id' or "Column" in col:
-            continue
-        df['S_' + col] = (dt_new[col] - dt_new[col].mean()) / dt_new[col].std()
-        Scols.append('S_' + col)
-
-    # PCA降维
-    pca = decomposition.PCA(n_components=8)
-    df = pca.fit_transform(df)  #ndarray
-    return df
