@@ -133,3 +133,6 @@ dmypy.json
 
 # test pic
 *.jpg
+
+# model cluster data
+*.json

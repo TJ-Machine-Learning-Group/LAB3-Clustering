@@ -5,6 +5,7 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
 from ClusterValidityIndex.CVI import Eval, DBI, CH, Silhouette
 from DataPrepare.dataAnalyzeandPrepare import GetData, GetNorData, GetPCAData
+import json
 
 
 def Predict(models: dict, data: np.ndarray) -> dict:
@@ -34,22 +35,25 @@ if __name__ == "__main__":
     #rint(labels)
 
     fig,ax = plt.subplots(nrows=1,ncols=2,figsize=(8, 6))
-    colors = ["#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF","#FF00FF","#FFF000","#00FFF0","#F000FF","#F00000","#00F000","#0000F0","#000000"]
+    colors = ["#FF0000","#00FF00","#0000FF","#FFFF00","#00FFFF","#FF00FF","#FFF000","#00FFF0","#F000FF","#F00000","#00F000","#0000F0","#F00F00","#000000"]
     for i,j in enumerate(labels.items()):
         model_name, res_label = j
         print(model_name)
-        se = set(res_label)
+        se =  {str(i):0 for i in set(res_label)}
         used_colors = list()
         #print(se)
-        #ax = plt.subplot(projection = '3d')
         for k in se:
-            pdata = data[res_label==k]
-            color = colors[k]
+            num = int(k)
+            se[k]=str((res_label==num).sum())
+            pdata = data[res_label==num]
+            color = colors[num]
             ax[i].set_title(model_name)
             ax[i].scatter(pdata[:,0],pdata[:,1],s=5,color=color)
-            used_colors.append(k)
+            used_colors.append(num)
         #KMeans确实是n_clusters类,DBSCAN得看参数
         ax[i].legend(used_colors)
+        with open(f"{model_name}.json","w",encoding="utf-8") as f:
+            json.dump(se,f)
         Eval(data, res_label)
     plt.savefig("test.jpg")
-    plt.close()
+    #plt.show()

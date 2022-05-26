@@ -16,22 +16,24 @@ def GetData(csv_path):
 
     # ## 数据清洗
     dt_new = dt.iloc[:, 1:-4]  # 去除数据集最后4列和第一列
+    dt_new.drop(["status_published"], axis=1, inplace=True)
 
     # 如果有重复值则去重？
     # 貌似不应该去重，同天发布的同类型商品反应数量相同是有可能的
     #dt_new = dt_new.drop_duplicates()  # 去除重复值
 
     # 时间转时间戳
-    dt_new['status_published'] = pd.to_datetime(dt_new['status_published'],
-                                                format='%m/%d/%Y %H:%M',
-                                                errors='coerce')
-    dt_new['status_published'] = dt_new['status_published'].astype(
-        'int64') // 1e9
+    #dt_new['status_published'] = pd.to_datetime(dt_new['status_published'],
+    #                                            format='%m/%d/%Y %H:%M',
+    #                                            errors='coerce')
+    #dt_new['status_published'] = dt_new['status_published'].astype(
+    #    'int64') // 1e9
 
     # 类别数据编码，添加四行
     pf = pd.get_dummies(dt_new['status_type'])
     dt_new = pd.concat([dt_new, pf], axis=1)
     dt_new.drop(['status_type'], axis=1, inplace=True)
+    #print(dt_new['status_published'],dt_new["num_reactions"])
     return dt_new
 
 
