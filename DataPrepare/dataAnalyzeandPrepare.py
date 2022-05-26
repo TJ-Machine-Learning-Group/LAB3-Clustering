@@ -28,28 +28,29 @@ def GetData(csv_path):
     dt_new['status_published'] = dt_new['status_published'].astype(
         'int64') // 1e9
 
-    # 类别数据编码，添加四行
+    # 类别数据编码，添加四列
     pf = pd.get_dummies(dt_new['status_type'])
-    dt_new = pd.concat([dt_new, pf], axis=1)
+    #dt_new = pd.concat([dt_new, pf], axis=1)
     dt_new.drop(['status_type'], axis=1, inplace=True)
-    return dt_new
+    return dt_new,pf
 
 
 def GetNorData(csv_path):
-    dt_new = GetData(csv_path)
+    dt_new,pf = GetData(csv_path)
     #标准化
     cols = dt_new.columns
     df = pd.DataFrame()
     for col in cols:
         df['S_' + col] = (dt_new[col] - dt_new[col].mean()) / dt_new[col].std()
-    return df
+    return df,pf
 
 
 def GetPCAData(csv_path, n_components):
-    df = GetNorData(csv_path)
+    df,pf = GetNorData(csv_path)
     # PCA降维
     pca = decomposition.PCA(n_components=n_components)
     df = pca.fit_transform(df)  #ndarray
+    df = np.concatenate((df,pf.values),axis=1)
     return df
 
 

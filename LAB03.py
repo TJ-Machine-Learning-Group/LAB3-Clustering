@@ -28,11 +28,11 @@ if __name__ == "__main__":
     min_samples = 10
     models['dbscan'] = DBSCAN(eps=eps, min_samples=min_samples)
 
-    #标准化+PCA降维 保留8个分量
+    #标准化+PCA降维 保留2个分量
     csv_path = "./Live_20210128.csv"
     data = GetPCAData(csv_path=csv_path, n_components=2)
-
-    labels = Predict(models, data)  #data是(m,8)的数组，默认使用欧氏距离（要用其它距离可以先算出来
+    print(data)
+    labels = Predict(models, data)  #data是(m,6)的数组，默认使用欧氏距离（要用其它距离可以先算出来
     print(labels)
 
     fig,ax = plt.subplots(nrows=1,ncols=2,figsize=(8, 6))
