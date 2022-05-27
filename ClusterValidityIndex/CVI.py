@@ -53,7 +53,7 @@ def Eval(X: np.ndarray, labels: np.ndarray) -> Tuple[int,int,float,float,float]:
     # 分类适确性指标
     #print("Davies-Bouldin Index:%.3f" %
     dbi = metrics.davies_bouldin_score(X, labels)#)
-    fin = (sc+ sigmoid(ch)+1-sigmoid(dbi))/3
+    fin = (sigmoid(sc)+ sigmoid(ch)+1-sigmoid(dbi))/3
     return [n_clusters_,n_noise_,sc,ch,dbi,fin]
 
 # 测试评估函数
