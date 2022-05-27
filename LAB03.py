@@ -51,7 +51,9 @@ if __name__ == "__main__":
             model_name, res_label = k
             eval_data = Eval(data, res_label)
             for s in range(len(eval_data)):
-                make_xlsx_body(ws,
-                               i * len(indexs) + 2 + s, j + 1,
-                               "{:.2f}".format(eval_data[s]))
+                if not isinstance(eval_data[s], int):
+                    value = "{:.2f}".format(eval_data[s])
+                else:
+                    value = eval_data[s]
+                make_xlsx_body(ws, i * len(indexs) + 2 + s, j + 1, value)
     wb.save('test.xlsx')
