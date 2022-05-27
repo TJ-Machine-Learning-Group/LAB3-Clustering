@@ -7,6 +7,7 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
 from sklearn import metrics
 import time
+from typing import Tuple
 
 
 def Silhouette(X, labels):
@@ -20,14 +21,16 @@ def CH(X, labels):
 def DBI(X, labels):
     return metrics.davies_bouldin_score(X, labels)
 
+def sigmoid(x):
+    return 1/1+np.exp(-x)
 
 # 总评估函数
-def Eval(X: np.ndarray, labels: np.ndarray):
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise_ = list(labels).count(-1)
+def Eval(X: np.ndarray, labels: np.ndarray) -> Tuple[int,int,float,float,float]:
+    n_clusters_ = len(set(labels)) - (-1 in labels)
+    n_noise_ = (labels==-1).sum()
 
-    print("Estimated number of clusters: %d" % n_clusters_)
-    print("Estimated number of noise points: %d" % n_noise_)
+    # print("Estimated number of clusters: %d" % n_clusters_)
+    # print("Estimated number of noise points: %d" % n_noise_)
 
     #没有labels_true 没法用这些评价指标
     #print("Homogeneity: %0.3f" %
@@ -41,15 +44,17 @@ def Eval(X: np.ndarray, labels: np.ndarray):
     #      metrics.adjusted_mutual_info_score(labels_true, labels))
 
     # 轮廓系数
-    print("Silhouette Coefficient: %0.3f" %
-          metrics.silhouette_score(X, labels))
+    # sc,ch,dbi = Silhouette(X,labels),CH(X,labels),DBI(X,labels)
+    # print("Silhouette Coefficient: %0.3f" %
+    sc = metrics.silhouette_score(X, labels)#)
     # Calinski-Harabaz Index
-    print("Calinski-Harabaz Index:%.3f" %
-          metrics.calinski_harabasz_score(X, labels))
+    #print("Calinski-Harabaz Index:%.3f" %
+    ch = metrics.calinski_harabasz_score(X, labels)#)
     # 分类适确性指标
-    print("Davies-Bouldin Index:%.3f" %
-          metrics.davies_bouldin_score(X, labels))
-
+    #print("Davies-Bouldin Index:%.3f" %
+    dbi = metrics.davies_bouldin_score(X, labels)#)
+    fin = (sc+ sigmoid(ch)+1-sigmoid(dbi))/3
+    return [n_clusters_,n_noise_,sc,ch,dbi,fin]
 
 # 测试评估函数
 if __name__ == "__main__":
